@@ -1,0 +1,34 @@
+const express = require('express');
+const axios = require('axios');
+const app = express();
+app.use(express.json());
+
+// Endpoint que recibe el webhook de GHL
+app.post('/programar-mensaje', async (req, res) => {
+  const { nombre_lead, contexto } = req.body;
+
+  // Construir prompt para Claude
+  const prompt = `Redacta un mensaje personalizado para el lead llamado ${nombre_lead}. Contexto: ${contexto}`;
+
+  // Llamar a la API de Claude
+  const claude = await axios.post('https://api.anthropic.com/v1/complete', {
+    prompt,
+    model: 'claude-2',
+    max_tokens_to_sample: 200
+  }, {
+    headers: {
+      'x-api-key': 'TU_API_KEY_CLAUDE',
+      'Content-Type': 'application/json'
+    }
+  });
+
+  // Respuesta generada por Claude
+  const mensaje = claude.data.completion;
+
+  // Aquí puedes enviar el mensaje a GHL vía su API, o devolverlo al workflow
+  // Por simplicidad, solo respondemos el mensaje generado
+  res.json({ mensaje });
+});
+
+// Servidor escuchando
+app.listen(3000, () => console.log('Tool listo en puerto 3000'));
